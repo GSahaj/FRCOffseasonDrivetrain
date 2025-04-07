@@ -11,14 +11,18 @@ public class Drivetrain extends SubsystemBase{
 
     //Method for driving xSpeed -- Shraft, ySpeed -- Forward/Backwords, zRotation -- Left/Right
     public void drive(double xSpeed, double ySpeed, double zRotation){
+        //Apply deadband to all parameter
         xSpeed = applyDeadBand(xSpeed);
         ySpeed = applyDeadBand(ySpeed);
         zRotation = applyDeadBand(zRotation);
 
+        //Apply SlewRateLimiter to all the parameter
         xSpeed = RobotMap.variables.xSpeedLimiter.calculate(xSpeed);
         ySpeed = RobotMap.variables.ySpeedLimiter.calculate(ySpeed);
         zRotation = RobotMap.variables.zRotationLimiter.calculate(zRotation);
         
+        //Using boolean value of fieldOriented from RobotMap.java
+        //If true -- Using gyroAngle via Rotational2D, else -- regular mecanum drive
         if(!RobotMap.variables.fieldOriented){
             RobotMap.variables.robotDrive.driveCartesian(xSpeed, ySpeed, zRotation, RobotMap.variables.gyroAngle);
         }
@@ -36,34 +40,42 @@ public class Drivetrain extends SubsystemBase{
             return 0;
         }
 
-        //Mathematical calcualtion 
+        //Mathematical calculation to calculate deadband
         return Math.copySign((Math.abs(value) - deadband) / (1.0 - deadband), value);
     }
 
     public void stop(){
+        //Reset and Stop all robot related events
         RobotMap.variables.xSpeedLimiter.reset(0);
         RobotMap.variables.ySpeedLimiter.reset(0);
         RobotMap.variables.zRotationLimiter.reset(0);
         RobotMap.variables.robotDrive.stopMotor();
+        resetGyro();
     }
 
+
+    //Encapsulating the gyro reset Angle as an Method
     public void resetGyro(){
         RobotMap.variables.gyro.reset();
     }
 
+    //Encapsulating the gyro Angle as an Method
     public double getGyroAngle(){
         return RobotMap.variables.gyro.getAngle();
     }
     
+    //Encapsulate the boolean value whether value is fieldOriented
     public boolean isFieldOriented(){
         return RobotMap.variables.fieldOriented;
     }
 
+    //Toggle  between field Oritned by flipping boolean operation to inverse
     public void toggleFieldOriented(){
         RobotMap.variables.fieldOriented = !RobotMap.variables.fieldOriented;
         resetGyro();
     }
 
+    //Reseting FieldOrientation -- needs to be changed
     public void resetFieldOrientation(){
         resetGyro();
     }
